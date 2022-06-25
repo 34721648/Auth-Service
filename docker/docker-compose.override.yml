@@ -1,0 +1,18 @@
+version: '3'
+services:
+  
+  auth_api:
+    ports:
+      - "5001:5001"
+
+  auth_redis:
+    ports:
+      - "6379:6379"
+
+  auth_postgres:
+    ports:
+      - "5432:5432"
+
+  nginx:
+    ports:
+      - "80:80"

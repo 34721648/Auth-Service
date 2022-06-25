@@ -1,0 +1,21 @@
+repos:
+-   repo: local
+    hooks:
+    -   id: add-trailing-comma
+        name: Add trailing commas
+        description: Automatically add trailing commas to calls and literals.
+        entry: add-trailing-comma
+        language: python
+        types: [python]
+    -   id: isort
+        name: Sort imports
+        entry: isort
+        language: python
+        types: [python]
+    -   id: flake8
+        name: flake8
+        description: wemake-python-styleguide enforcement
+        entry: flake8
+        args: ["--config=setup.cfg"]
+        language: python
+        types: [python]

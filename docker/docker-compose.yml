@@ -1,0 +1,35 @@
+version: '3'
+services:
+
+  auth_api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    environment:
+      - AUTH_REDIS_HOST=auth_redis
+      - AUTH_DB_HOST=auth_postgres
+    depends_on:
+      - auth_postgres
+      - auth_redis
+
+  nginx:
+    build: ../nginx
+    depends_on:
+      - auth_api
+  
+  auth_postgres:
+    image: postgres:13
+    container_name: auth_postgres
+    volumes:
+      - auth_postgresql_volume:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${AUTH_DB_USER}
+      - POSTGRES_PASSWORD=${AUTH_DB_PASSWORD}
+      - POSTGRES_DB=${AUTH_DB_NAME}
+
+  auth_redis:
+    image: redis:7.0.0-alpine
+    container_name: auth_redis
+
+volumes:
+  auth_postgresql_volume:
