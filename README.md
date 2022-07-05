@@ -11,7 +11,6 @@
 ## Разработчики
 
 - https://github.com/heckerai
-- https://github.com/makondratev 
 
 ## Запуск проекта
 
