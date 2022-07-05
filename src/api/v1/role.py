@@ -88,7 +88,7 @@ class EditRole(Resource):
     @role_api.marshal_with(message_model)
     @role_api.expect(role_edit_parser)
     @role_api.doc(security='Bearer')
-    def post(self):
+    def put(self):
         args = role_edit_parser.parse_args()
         try:
             role_service.edit_role(args['name'], args['new_name'], args['new_descritpion'])
