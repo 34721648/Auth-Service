@@ -142,7 +142,7 @@ class EditLogin(Resource):
     @account_api.expect(edit_login_parser)
     @account_api.marshal_with(message_model)
     @account_api.doc(security='Bearer')
-    def post(self):
+    def put(self):
         args = edit_login_parser.parse_args()
         user_id = get_jwt_identity()
         try:
@@ -158,7 +158,7 @@ class EditPassword(Resource):
     @account_api.expect(edit_password_parser)
     @account_api.marshal_with(message_model)
     @account_api.doc(security='Bearer')
-    def post(self):
+    def put(self):
         args = edit_password_parser.parse_args()
         user_id = get_jwt_identity()
         account_service.edit_user_password(user_id, args['new_password'])
