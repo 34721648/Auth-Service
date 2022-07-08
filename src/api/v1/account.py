@@ -1,5 +1,6 @@
 from http import HTTPStatus
 
+from flask import url_for
 from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
@@ -32,6 +33,7 @@ from db.config import (
     db,
     token_storage,
 )
+from oauth import oauth
 from services.account import AccountService
 from services.exceptions import (
     UnvailableLogin,
@@ -179,3 +181,16 @@ class RefreshToken(Resource):
         token_storage.set_value(refresh_token_jti, '', time_to_leave=settings.jwt.refresh_token_expire_time)
 
         return {'access_token': access_token, 'refresh_token': refresh_token}, HTTPStatus.OK
+
+
+@account_api.route('/login-google')
+class GoogleLogin(Resource):
+    def get(self):
+        redirect_uri = url_for('v1/account_google_authorize', _external=True)
+        return oauth.google.authorize_redirect(redirect_uri)
+
+
+@account_api.route('/authorize-google')
+class GoogleAuthorize(Resource):
+    def get(self):
+        return oauth.google.authorize_access_token()

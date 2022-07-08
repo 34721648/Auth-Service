@@ -13,4 +13,4 @@ EXPOSE 5001
 
 COPY . .
 
-CMD python src/wsgi_app.py
+CMD python src/app.py
