@@ -91,9 +91,8 @@ class AccountService:
         with db_session(self.db):
             user.password = new_stored_hash
 
-    def get_user_id_by_login(self, login: str) -> str:
-        user = User.query.filter_by(login=login).first()
-        return user.id
+    def get_user_by_login(self, login: str) -> str:
+        return User.query.filter_by(login=login).first()
 
     def register_user_session(self, user_id: str, user_agent: str) -> None:
         user_session = UserSession(user_id=user_id, user_agent=user_agent)

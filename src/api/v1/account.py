@@ -91,12 +91,12 @@ class Login(Resource):
         except WrongPassword:
             return {'msg': 'Authorization Error!'}, HTTPStatus.UNAUTHORIZED
 
-        user_id = account_service.get_user_id_by_login(login=args['login'])
+        user = account_service.get_user_by_login(login=args['login'])
 
-        access_token = create_access_token(identity=user_id)
-        refresh_token = create_refresh_token(identity=user_id)
+        access_token = create_access_token(identity=user.id, additional_claims={'roles': user.roles})
+        refresh_token = create_refresh_token(identity=user.id)
 
-        account_service.register_user_session(user_id, args['User-Agent'])
+        account_service.register_user_session(user.id, args['User-Agent'])
 
         return {'access_token': access_token, 'refresh_token': refresh_token}, HTTPStatus.OK
 
