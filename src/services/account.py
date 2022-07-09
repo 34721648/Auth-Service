@@ -11,6 +11,7 @@ from sqlalchemy.exc import IntegrityError
 from db.config import db_session
 from db.models import (
     AuthType,
+    Password,
     User,
     UserSession,
 )
@@ -29,42 +30,46 @@ class AccountService:
     def __init__(self, db: SQLAlchemy):
         self.db = db
 
-    def create_user(
+    def registrate_user(
         self,
         login: str,
         password: str,
         email: str,
+        auth_type: AuthType,
         is_superuser: bool = False,
     ) -> None:
 
-        # stored_hash = self._generate_password_hex_str(password)
+        stored_hash = self._generate_password_hex_str(password)
         user = User(
             login=login,
             email=email,
-            auth_type=AuthType.default,
+            auth_type=auth_type,
             is_superuser=is_superuser,
         )
-        # print(user.id)
         try:
             with db_session(self.db) as session:
                 session.add(user)
         except IntegrityError:
             raise UserAlreadyExists
 
+        password = Password(user_id=user.id, password=stored_hash)
+        with db_session(self.db) as session:
+            session.add(password)
+
     def login(
         self,
         login: str,
         password: str,
     ):
-        user = User.query.filter_by(login=login).first()
-
+        user = User.query.filter_by(login=login, auth_type=AuthType.default).first()
         if user is None:
             raise UserDoesntExists
 
-        stored_bytes = bytes.fromhex(user.password)
+        password_from_db = Password.query.filter_by(user_id=user.id).first()
+
+        stored_bytes = bytes.fromhex(password_from_db.password)
         user_password_salt = stored_bytes[:SALT_SIZE]
         user_password_hash = stored_bytes[SALT_SIZE:]
-
         entered_password_hash = self._get_hash(password, user_password_salt)
 
         if entered_password_hash != user_password_hash:

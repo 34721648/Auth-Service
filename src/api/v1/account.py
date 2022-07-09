@@ -33,6 +33,7 @@ from db.config import (
     db,
     token_storage,
 )
+from db.models import AuthType
 from oauth import oauth
 from services.account import AccountService
 from services.exceptions import (
@@ -66,10 +67,11 @@ class Register(Resource):
     def post(self):
         args = register_parser.parse_args()
         try:
-            account_service.create_user(
+            account_service.registrate_user(
                 login=args['login'],
                 password=args['password'],
                 email=args['email'],
+                auth_type=AuthType.default,
             )
         except UserAlreadyExists:
             return {'msg': 'User already exists!'}, HTTPStatus.CONFLICT

@@ -73,7 +73,7 @@ class UserSession(db.Model):
     created_at = Column(DateTime, server_default=func.now())
 
 
-class Passwords(db.Model):
+class Password(db.Model):
     __tablename__ = 'passwords'
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
