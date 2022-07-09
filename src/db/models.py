@@ -1,3 +1,4 @@
+import enum
 import uuid
 
 from sqlalchemy import (
@@ -5,6 +6,7 @@ from sqlalchemy import (
     Boolean,
     Column,
     DateTime,
+    Enum,
     ForeignKey,
     String,
     func,
@@ -16,6 +18,11 @@ from sqlalchemy.orm import (
 )
 
 from db.config import db
+
+
+class AuthType(enum.Enum):
+    default = 'default'
+    google = 'google'
 
 
 class TimestampMixin:
@@ -44,9 +51,10 @@ class User(db.Model, TimestampMixin):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
     login = Column(String(100), unique=True, nullable=False)
-    password = Column(String(255), nullable=False)
     email = Column(String(255), unique=True, nullable=False)
+    auth_type = Column(Enum(AuthType), nullable=False)
     is_superuser = Column(Boolean(), default=False)
+
     roles = relationship(
         'Role',
         secondary='roles_users',
@@ -63,3 +71,11 @@ class UserSession(db.Model):
     user_id = Column('user_id', UUID(as_uuid=True), ForeignKey('users.id'))
     user_agent = Column(String(255))
     created_at = Column(DateTime, server_default=func.now())
+
+
+class Passwords(db.Model):
+    __tablename__ = 'passwords'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    user_id = Column('user_id', UUID(as_uuid=True), ForeignKey('users.id'))
+    password = Column(String(512), nullable=False)

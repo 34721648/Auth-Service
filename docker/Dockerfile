@@ -13,4 +13,6 @@ EXPOSE 5001
 
 COPY . .
 
-CMD python src/app.py
+#CMD python src/app.py
+RUN ["chmod", "+x", "./entrypoint.sh"]
+ENTRYPOINT [ "./entrypoint.sh" ]

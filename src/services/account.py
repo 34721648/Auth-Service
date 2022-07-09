@@ -10,6 +10,7 @@ from sqlalchemy.exc import IntegrityError
 
 from db.config import db_session
 from db.models import (
+    AuthType,
     User,
     UserSession,
 )
@@ -36,13 +37,14 @@ class AccountService:
         is_superuser: bool = False,
     ) -> None:
 
-        stored_hash = self._generate_password_hex_str(password)
+        # stored_hash = self._generate_password_hex_str(password)
         user = User(
             login=login,
-            password=stored_hash,
             email=email,
+            auth_type=AuthType.default,
             is_superuser=is_superuser,
         )
+        # print(user.id)
         try:
             with db_session(self.db) as session:
                 session.add(user)
