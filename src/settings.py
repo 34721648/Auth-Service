@@ -67,8 +67,8 @@ class WSGISettings(BaseSettings):
 class GoogleAuthSettings(BaseSettings):
     name: str = 'google'
     server_metadata_url: str = 'https://accounts.google.com/.well-known/openid-configuration'
-    client_id: str = '983588090533-o37a1sldp68l7h9rdodomkqsfhup71mi.apps.googleusercontent.com'
-    client_secret: str = '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'
+    client_id: str = ''
+    client_secret: str = ''
 
     class Config:
         env_prefix = 'GOOGLE_AUTH_'
