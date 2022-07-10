@@ -10,6 +10,7 @@ from api.v1.models.shared_models import message_model
 from api.v1.parsers.role_management_parsers import manage_role_parser
 from api.v1.permissions import role_required
 from db.config import db
+from limiter import limiter
 from services.account import AccountService
 from services.exceptions import RelationDoesntExists
 from services.role import RoleService
@@ -33,6 +34,7 @@ role_management_api.authorizations = {
 
 @role_management_api.route('/set-role')
 class SetRole(Resource):
+    @limiter.limit('60 per minute')
     @jwt_required()
     @role_required('admin')
     @role_management_api.expect(manage_role_parser)
@@ -46,6 +48,7 @@ class SetRole(Resource):
 
 @role_management_api.route('/delete-role')
 class DeleteRole(Resource):
+    @limiter.limit('60 per minute')
     @jwt_required()
     @role_required('admin')
     @role_management_api.expect(manage_role_parser)
