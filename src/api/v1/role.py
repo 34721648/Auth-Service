@@ -15,6 +15,7 @@ from api.v1.parsers.role_parsers import (
 )
 from api.v1.permissions import role_required
 from db.config import db
+from limiter import limiter
 from services.exceptions import (
     RoleAlreadyExists,
     RoleDoesntExists,
@@ -38,6 +39,7 @@ role_api.authorizations = {
 
 @role_api.route('/roles')
 class RolesView(Resource):
+    @limiter.limit('60 per minute')
     @jwt_required()
     @role_required('admin')
     @role_api.doc('get list of roles')
@@ -46,6 +48,7 @@ class RolesView(Resource):
     def get(self):
         return role_service.get_all_roles()
 
+    @limiter.limit('60 per minute')
     @jwt_required()
     @role_required('admin')
     @role_api.expect(role_create_parser)
@@ -67,6 +70,7 @@ class RolesView(Resource):
         }
         return role_data, HTTPStatus.CREATED
 
+    @limiter.limit('60 per minute')
     @jwt_required()
     @role_required('admin')
     @role_api.expect(role_delete_parser)
@@ -83,6 +87,7 @@ class RolesView(Resource):
 
 @role_api.route('/edit-role')
 class EditRole(Resource):
+    @limiter.limit('60 per minute')
     @jwt_required()
     @role_required('admin')
     @role_api.marshal_with(message_model)
