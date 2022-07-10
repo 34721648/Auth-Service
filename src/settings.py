@@ -56,7 +56,7 @@ class JWTSettings(BaseSettings):
 
 
 class WSGISettings(BaseSettings):
-    host: str = "127.0.0.1"
+    host: str = 'localhost'
     port: int = 5001
     workers: int = 3
 
@@ -74,12 +74,21 @@ class GoogleAuthSettings(BaseSettings):
         env_prefix = 'GOOGLE_AUTH_'
 
 
+class JaegerSettings(BaseSettings):
+    host: str = 'localhost'
+    port: int = 6831
+
+    class Config:
+        env_prefix = 'JAEGER_'
+
+
 class Settings(BaseSettings):
     db: DatabaseSettings = DatabaseSettings()
     redis: RedisSettings = RedisSettings()
     jwt: JWTSettings = JWTSettings()
     wsgi: WSGISettings = WSGISettings()
     google_auth: GoogleAuthSettings = GoogleAuthSettings()
+    jaeger: JaegerSettings = JaegerSettings()
 
 
 settings = Settings()
