@@ -10,6 +10,7 @@ from sqlalchemy.exc import IntegrityError
 
 from db.config import db_session
 from db.models import (
+    Password,
     User,
     UserSession,
 )
@@ -28,7 +29,7 @@ class AccountService:
     def __init__(self, db: SQLAlchemy):
         self.db = db
 
-    def create_user(
+    def registrate_user(
         self,
         login: str,
         password: str,
@@ -39,7 +40,6 @@ class AccountService:
         stored_hash = self._generate_password_hex_str(password)
         user = User(
             login=login,
-            password=stored_hash,
             email=email,
             is_superuser=is_superuser,
         )
@@ -49,26 +49,32 @@ class AccountService:
         except IntegrityError:
             raise UserAlreadyExists
 
+        password = Password(user_id=user.id, password=stored_hash)
+        with db_session(self.db) as session:
+            session.add(password)
+
     def login(
         self,
         login: str,
         password: str,
-    ):
+    ) -> User:
         user = User.query.filter_by(login=login).first()
-
         if user is None:
             raise UserDoesntExists
 
-        stored_bytes = bytes.fromhex(user.password)
+        password_from_db = Password.query.filter_by(user_id=user.id).first()
+        if password_from_db is None:
+            raise UserDoesntExists
+
+        stored_bytes = bytes.fromhex(password_from_db.password)
         user_password_salt = stored_bytes[:SALT_SIZE]
         user_password_hash = stored_bytes[SALT_SIZE:]
-
         entered_password_hash = self._get_hash(password, user_password_salt)
 
         if entered_password_hash != user_password_hash:
             raise WrongPassword
 
-        return True
+        return user
 
     def edit_user_login(self, user_id: str, new_login: str):
         user = User.query.filter_by(id=user_id).first()
@@ -84,9 +90,8 @@ class AccountService:
         with db_session(self.db):
             user.password = new_stored_hash
 
-    def get_user_id_by_login(self, login: str) -> str:
-        user = User.query.filter_by(login=login).first()
-        return user.id
+    def get_user_by_login(self, login: str) -> str:
+        return User.query.filter_by(login=login).first()
 
     def register_user_session(self, user_id: str, user_agent: str) -> None:
         user_session = UserSession(user_id=user_id, user_agent=user_agent)

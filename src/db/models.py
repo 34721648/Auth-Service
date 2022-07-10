@@ -1,3 +1,4 @@
+import enum
 import uuid
 
 from sqlalchemy import (
@@ -5,6 +6,7 @@ from sqlalchemy import (
     Boolean,
     Column,
     DateTime,
+    Enum,
     ForeignKey,
     String,
     func,
@@ -16,6 +18,10 @@ from sqlalchemy.orm import (
 )
 
 from db.config import db
+
+
+class SocialName(enum.Enum):
+    google = 'google'
 
 
 class TimestampMixin:
@@ -44,9 +50,9 @@ class User(db.Model, TimestampMixin):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
     login = Column(String(100), unique=True, nullable=False)
-    password = Column(String(255), nullable=False)
     email = Column(String(255), unique=True, nullable=False)
     is_superuser = Column(Boolean(), default=False)
+
     roles = relationship(
         'Role',
         secondary='roles_users',
@@ -63,3 +69,19 @@ class UserSession(db.Model):
     user_id = Column('user_id', UUID(as_uuid=True), ForeignKey('users.id'))
     user_agent = Column(String(255))
     created_at = Column(DateTime, server_default=func.now())
+
+
+class Password(db.Model):
+    __tablename__ = 'passwords'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    user_id = Column('user_id', UUID(as_uuid=True), ForeignKey('users.id'))
+    password = Column(String(512), nullable=False)
+
+
+class SocialAccount(db.Model):
+    __tablename__ = 'social_users'
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    user_id = Column('user_id', UUID(as_uuid=True), ForeignKey('users.id'))
+    social_id = Column(String(255), nullable=False, unique=True)
+    social_name = Column(Enum(SocialName), nullable=False)

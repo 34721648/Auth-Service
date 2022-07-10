@@ -56,16 +56,22 @@ class JWTSettings(BaseSettings):
 
 
 class WSGISettings(BaseSettings):
-    """
-    Config for running the app. Not used in main app config.
-    """
-
-    host: str = "0.0.0.0"
+    host: str = "127.0.0.1"
     port: int = 5001
     workers: int = 3
 
     class Config:
-        env_prefix = "AUTH_WSGI_"
+        env_prefix = 'AUTH_WSGI_'
+
+
+class GoogleAuthSettings(BaseSettings):
+    name: str = 'google'
+    server_metadata_url: str = 'https://accounts.google.com/.well-known/openid-configuration'
+    client_id: str = '983588090533-o37a1sldp68l7h9rdodomkqsfhup71mi.apps.googleusercontent.com'
+    client_secret: str = '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'
+
+    class Config:
+        env_prefix = 'GOOGLE_AUTH_'
 
 
 class Settings(BaseSettings):
@@ -73,6 +79,7 @@ class Settings(BaseSettings):
     redis: RedisSettings = RedisSettings()
     jwt: JWTSettings = JWTSettings()
     wsgi: WSGISettings = WSGISettings()
+    google_auth: GoogleAuthSettings = GoogleAuthSettings()
 
 
 settings = Settings()

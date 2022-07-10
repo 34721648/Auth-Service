@@ -1,5 +1,6 @@
 from http import HTTPStatus
 
+from flask import url_for
 from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
@@ -22,6 +23,7 @@ from api.v1.models.shared_models import message_model
 from api.v1.parsers.account_parsers import (
     edit_login_parser,
     edit_password_parser,
+    google_login_parser,
     login_history_parser,
     login_parser,
     logout_parser,
@@ -32,6 +34,8 @@ from db.config import (
     db,
     token_storage,
 )
+from db.models import SocialName
+from oauth import oauth
 from services.account import AccountService
 from services.exceptions import (
     UnvailableLogin,
@@ -39,10 +43,13 @@ from services.exceptions import (
     UserDoesntExists,
     WrongPassword,
 )
+from services.social_account import SocialAccountService
 from settings import settings
 
 account_api = Namespace('v1/account', description='Account operations')
 account_service = AccountService(db)
+social_account_service = SocialAccountService(db)
+
 account_api.authorizations = {
     'Bearer': {
         'type': 'apiKey',
@@ -64,7 +71,7 @@ class Register(Resource):
     def post(self):
         args = register_parser.parse_args()
         try:
-            account_service.create_user(
+            account_service.registrate_user(
                 login=args['login'],
                 password=args['password'],
                 email=args['email'],
@@ -81,18 +88,16 @@ class Login(Resource):
     def post(self):
         args = login_parser.parse_args()
         try:
-            account_service.login(login=args['login'], password=args['password'])
+            user = account_service.login(login=args['login'], password=args['password'])
         except UserDoesntExists:
             return {'msg': 'Authorization Error!'}, HTTPStatus.UNAUTHORIZED
         except WrongPassword:
             return {'msg': 'Authorization Error!'}, HTTPStatus.UNAUTHORIZED
 
-        user_id = account_service.get_user_id_by_login(login=args['login'])
+        access_token = create_access_token(identity=user.id, additional_claims={'roles': user.roles})
+        refresh_token = create_refresh_token(identity=user.id)
 
-        access_token = create_access_token(identity=user_id)
-        refresh_token = create_refresh_token(identity=user_id)
-
-        account_service.register_user_session(user_id, args['User-Agent'])
+        account_service.register_user_session(user.id, args['User-Agent'])
 
         return {'access_token': access_token, 'refresh_token': refresh_token}, HTTPStatus.OK
 
@@ -178,4 +183,42 @@ class RefreshToken(Resource):
         refresh_token_jti = get_jwt()['jti']
         token_storage.set_value(refresh_token_jti, '', time_to_leave=settings.jwt.refresh_token_expire_time)
 
+        return {'access_token': access_token, 'refresh_token': refresh_token}, HTTPStatus.OK
+
+
+@account_api.route('/login-google')
+class GoogleLogin(Resource):
+    def get(self):
+        redirect_uri = url_for('v1/account_google_authorize', _external=True)
+        return oauth.google.authorize_redirect(redirect_uri)
+
+
+@account_api.route('/authorize-google')
+class GoogleAuthorize(Resource):
+    @account_api.expect(google_login_parser)
+    @account_api.marshal_with(login_model, skip_none=True)
+    def get(self):
+        args = google_login_parser.parse_args()
+        user_info = oauth.google.authorize_access_token()['userinfo']
+        try:
+            user = social_account_service.login(
+                social_id=user_info['sub'],
+                social_name=SocialName.google,
+            )
+        except UserDoesntExists:
+            social_account_service.register_user(
+                social_id=user_info['sub'],
+                social_name=SocialName.google,
+                email=user_info['email'],
+            )
+
+        user = social_account_service.login(
+            social_id=user_info['sub'],
+            social_name=SocialName.google,
+        )
+
+        access_token = create_access_token(identity=user.id, additional_claims={'roles': user.roles})
+        refresh_token = create_refresh_token(identity=user.id)
+
+        account_service.register_user_session(user.id, args['User-Agent'])
         return {'access_token': access_token, 'refresh_token': refresh_token}, HTTPStatus.OK
