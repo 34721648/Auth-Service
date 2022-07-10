@@ -20,8 +20,7 @@ from sqlalchemy.orm import (
 from db.config import db
 
 
-class AuthType(enum.Enum):
-    default = 'default'
+class SocialName(enum.Enum):
     google = 'google'
 
 
@@ -52,7 +51,6 @@ class User(db.Model, TimestampMixin):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
     login = Column(String(100), unique=True, nullable=False)
     email = Column(String(255), unique=True, nullable=False)
-    auth_type = Column(Enum(AuthType), nullable=False)
     is_superuser = Column(Boolean(), default=False)
 
     roles = relationship(
@@ -79,3 +77,11 @@ class Password(db.Model):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
     user_id = Column('user_id', UUID(as_uuid=True), ForeignKey('users.id'))
     password = Column(String(512), nullable=False)
+
+
+class SocialAccount(db.Model):
+    __tablename__ = 'social_users'
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    user_id = Column('user_id', UUID(as_uuid=True), ForeignKey('users.id'))
+    social_id = Column(String(255), nullable=False, unique=True)
+    social_name = Column(Enum(SocialName), nullable=False)

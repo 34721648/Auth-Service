@@ -23,3 +23,6 @@ logout_parser.add_argument('refresh_token', type=str, required=True, location='f
 login_history_parser = reqparse.RequestParser()
 login_history_parser.add_argument('page_size', type=int, default=10, location='args')
 login_history_parser.add_argument('page_number', type=int, default=1, location='args')
+
+google_login_parser = reqparse.RequestParser()
+google_login_parser.add_argument('User-Agent', location='headers')

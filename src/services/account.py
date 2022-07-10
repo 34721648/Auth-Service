@@ -10,7 +10,6 @@ from sqlalchemy.exc import IntegrityError
 
 from db.config import db_session
 from db.models import (
-    AuthType,
     Password,
     User,
     UserSession,
@@ -35,7 +34,6 @@ class AccountService:
         login: str,
         password: str,
         email: str,
-        auth_type: AuthType,
         is_superuser: bool = False,
     ) -> None:
 
@@ -43,7 +41,6 @@ class AccountService:
         user = User(
             login=login,
             email=email,
-            auth_type=auth_type,
             is_superuser=is_superuser,
         )
         try:
@@ -60,12 +57,14 @@ class AccountService:
         self,
         login: str,
         password: str,
-    ):
-        user = User.query.filter_by(login=login, auth_type=AuthType.default).first()
+    ) -> User:
+        user = User.query.filter_by(login=login).first()
         if user is None:
             raise UserDoesntExists
 
         password_from_db = Password.query.filter_by(user_id=user.id).first()
+        if password_from_db is None:
+            raise UserDoesntExists
 
         stored_bytes = bytes.fromhex(password_from_db.password)
         user_password_salt = stored_bytes[:SALT_SIZE]
@@ -75,7 +74,7 @@ class AccountService:
         if entered_password_hash != user_password_hash:
             raise WrongPassword
 
-        return True
+        return user
 
     def edit_user_login(self, user_id: str, new_login: str):
         user = User.query.filter_by(id=user_id).first()
