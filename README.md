@@ -5,8 +5,7 @@
 
 ## Репозитории
 
-- ETL Link: https://github.com/heckerai/ETL
-- Movies API Link: https://github.com/makondratev/Async_API_sprint_1_FastAPI
+- Movies API Link: https://github.com/heckerai/Movies-API
 
 ## Разработчики
 
