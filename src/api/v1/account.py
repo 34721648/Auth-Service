@@ -35,6 +35,7 @@ from db.config import (
     token_storage,
 )
 from db.models import SocialName
+from limiter import limiter
 from oauth import oauth
 from services.account import AccountService
 from services.exceptions import (
@@ -66,6 +67,7 @@ account_api.models[login_history_model.name] = login_history_model
 
 @account_api.route('/register')
 class Register(Resource):
+    @limiter.limit('60 per minute')
     @account_api.expect(register_parser)
     @account_api.marshal_with(message_model)
     def post(self):
@@ -83,6 +85,7 @@ class Register(Resource):
 
 @account_api.route('/login')
 class Login(Resource):
+    @limiter.limit('60 per minute')
     @account_api.expect(login_parser)
     @account_api.marshal_with(login_model, skip_none=True)
     def post(self):
@@ -104,6 +107,7 @@ class Login(Resource):
 
 @account_api.route('/logout')
 class Logout(Resource):
+    @limiter.limit('60 per minute')
     @jwt_required()
     @account_api.expect(logout_parser)
     @account_api.marshal_with(message_model)
@@ -121,6 +125,7 @@ class Logout(Resource):
 
 @account_api.route('/login-history')
 class LoginHistory(Resource):
+    @limiter.limit('60 per minute')
     @jwt_required()
     @account_api.expect(login_history_parser)
     @account_api.marshal_with(login_history_model)
@@ -143,6 +148,7 @@ class LoginHistory(Resource):
 
 @account_api.route('/edit-login')
 class EditLogin(Resource):
+    @limiter.limit('60 per minute')
     @jwt_required()
     @account_api.expect(edit_login_parser)
     @account_api.marshal_with(message_model)
@@ -159,6 +165,7 @@ class EditLogin(Resource):
 
 @account_api.route('/edit-password')
 class EditPassword(Resource):
+    @limiter.limit('60 per minute')
     @jwt_required()
     @account_api.expect(edit_password_parser)
     @account_api.marshal_with(message_model)
@@ -172,6 +179,7 @@ class EditPassword(Resource):
 
 @account_api.route('/refresh-token')
 class RefreshToken(Resource):
+    @limiter.limit('60 per minute')
     @jwt_required(refresh=True)
     @account_api.marshal_with(login_model, skip_none=True)
     @account_api.doc(security='Bearer')
@@ -188,6 +196,7 @@ class RefreshToken(Resource):
 
 @account_api.route('/login-google')
 class GoogleLogin(Resource):
+    @limiter.limit('60 per minute')
     def get(self):
         redirect_uri = url_for('v1/account_google_authorize', _external=True)
         return oauth.google.authorize_redirect(redirect_uri)
@@ -195,7 +204,7 @@ class GoogleLogin(Resource):
 
 @account_api.route('/authorize-google')
 class GoogleAuthorize(Resource):
-    @account_api.expect(google_login_parser)
+    @limiter.limit('60 per minute')
     @account_api.marshal_with(login_model, skip_none=True)
     def get(self):
         args = google_login_parser.parse_args()

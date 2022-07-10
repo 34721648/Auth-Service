@@ -13,6 +13,7 @@ from db.config import (
     migrate,
 )
 from jwt_config import jwt
+from limiter import limiter
 from oauth import oauth
 from settings import settings
 from tracer import configure_tracer
@@ -30,6 +31,7 @@ oauth.init_app(app)
 jwt.init_app(app)
 db.init_app(app)
 migrate.init_app(app, db)
+limiter.init_app(app)
 
 app.app_context().push()
 api = Api(app, version='0.0', title='Auth service')
