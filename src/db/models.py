@@ -1,4 +1,5 @@
 import enum
+import random
 import uuid
 
 from sqlalchemy import (
@@ -24,6 +25,37 @@ class SocialName(enum.Enum):
     google = 'google'
 
 
+class Countries(enum.Enum):
+    ru = 'ru'
+    eu = 'eu'
+    us = 'us'
+
+
+def random_country():
+    return random.choice([Countries.ru, Countries.eu, Countries.us])
+
+
+def create_users_partition(target, connection, **kw) -> None:
+    connection.execute(
+        f"""
+            CREATE TABLE IF NOT EXISTS "users_ru"
+            PARTITION OF "users" FOR VALUES IN ('{Countries.ru}')
+        """,
+    )
+    connection.execute(
+        f"""
+            CREATE TABLE IF NOT EXISTS "users_eu"
+            PARTITION OF "users" FOR VALUES IN ('{Countries.eu}')
+        """,
+    )
+    connection.execute(
+        f"""
+            CREATE TABLE IF NOT EXISTS "users_us"
+            PARTITION OF "users" FOR VALUES IN ('{Countries.us}')
+        """,
+    )
+
+
 class TimestampMixin:
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), server_onupdate=func.now())
@@ -47,11 +79,20 @@ class RolesUsers(db.Model):
 
 class User(db.Model, TimestampMixin):
     __tablename__ = 'users'
+    __table_args__ = (
+        {
+            'postgresql_partition_by': 'LIST (country)',
+            'listeners': [('after_create', create_users_partition)],
+        }
+    )
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
     login = Column(String(100), unique=True, nullable=False)
     email = Column(String(255), unique=True, nullable=False)
     is_superuser = Column(Boolean(), default=False)
+
+    # For countries used random values currently (for learning purposes)
+    country = Column(Enum(Countries), nullable=False, default=random_country)
 
     roles = relationship(
         'Role',
