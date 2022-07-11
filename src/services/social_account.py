@@ -20,8 +20,6 @@ class SocialAccountService:
         social_account = SocialAccount.query.filter_by(social_id=social_id, social_name=social_name).first()
         if social_account is None:
             raise UserDoesntExists
-
-        social_account = SocialAccount.query.filter_by(social_id=social_id, social_name=social_name).first()
         return User.query.filter_by(id=social_account.user_id).first()
 
     def register_user(self, social_id: str, social_name: SocialAccount, email: str):
