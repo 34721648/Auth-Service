@@ -40,9 +40,9 @@ api.add_namespace(role_api)
 api.add_namespace(role_management_api)
 app.secret_key = 'secret key'
 
-
-configure_tracer()
-FlaskInstrumentor().instrument_app(app)
+if settings.jaeger.enable_tracing:
+    configure_tracer()
+    FlaskInstrumentor().instrument_app(app)
 
 
 @app.before_request
