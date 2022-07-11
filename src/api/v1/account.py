@@ -34,7 +34,10 @@ from db.config import (
     db,
     token_storage,
 )
-from db.models import SocialName
+from db.models import (
+    SocialName,
+    User,
+)
 from limiter import limiter
 from oauth import oauth
 from services.account import AccountService
@@ -97,12 +100,8 @@ class Login(Resource):
         except WrongPassword:
             return {'msg': 'Authorization Error!'}, HTTPStatus.UNAUTHORIZED
 
-        access_token = create_access_token(identity=user.id, additional_claims={'roles': user.roles})
-        refresh_token = create_refresh_token(identity=user.id)
-
-        account_service.register_user_session(user.id, args['User-Agent'])
-
-        return {'access_token': access_token, 'refresh_token': refresh_token}, HTTPStatus.OK
+        tokens = _authorize_user(user, args['User-Agent'])
+        return tokens, HTTPStatus.OK
 
 
 @account_api.route('/logout')
@@ -225,9 +224,12 @@ class GoogleAuthorize(Resource):
             social_id=user_info['sub'],
             social_name=SocialName.google,
         )
+        tokens = _authorize_user(user, args['User-Agent'])
+        return tokens, HTTPStatus.OK
 
-        access_token = create_access_token(identity=user.id, additional_claims={'roles': user.roles})
-        refresh_token = create_refresh_token(identity=user.id)
 
-        account_service.register_user_session(user.id, args['User-Agent'])
-        return {'access_token': access_token, 'refresh_token': refresh_token}, HTTPStatus.OK
+def _authorize_user(user: User, user_agent: str) -> dict:
+    access_token = create_access_token(identity=user.id, additional_claims={'roles': user.roles})
+    refresh_token = create_refresh_token(identity=user.id)
+    account_service.register_user_session(user.id, user_agent)
+    return {'access_token': access_token, 'refresh_token': refresh_token}
