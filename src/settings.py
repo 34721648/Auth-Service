@@ -77,6 +77,7 @@ class GoogleAuthSettings(BaseSettings):
 class JaegerSettings(BaseSettings):
     host: str = 'localhost'
     port: int = 6831
+    enable_tracing: bool = True
 
     class Config:
         env_prefix = 'JAEGER_'
